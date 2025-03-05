@@ -1,0 +1,12 @@
+name: aws-py-s3-folder
+main: main.py
+runtime:
+  name: python
+  options:
+    typechecker: mypy    
+    toolchain: pip
+    virtualenv: ../.devenv/state/venv
+    # module: aws-py-s3-folder.__main__
+
+
+description: A minimal AWS Python Pulumi program
