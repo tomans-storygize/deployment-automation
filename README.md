@@ -14,3 +14,10 @@ cd ./web-example
 pulumi stack ls
 pulumi up # no passphrase on example stack
 ```
+
+also including some examples of how to use amazon key-management-service to encrypt and decrypt local contents
+
+```sh
+# round trip encrypt and decrypt example
+kms-decrypt <(kms-encrypt README.md)
+```

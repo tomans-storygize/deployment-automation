@@ -2,7 +2,8 @@
 
 {
   # https://devenv.sh/basics/
-  env.GREET = "devenv";
+  env.DEFAULT_KMS_ARN = "alias/staging-dev-key";
+  env.AWS_REGION = "us-west-2";
 
   # https://devenv.sh/packages/
   packages = [
@@ -36,7 +37,58 @@
   # scripts.hello.exec = ''
   #   echo hello from $GREET
   # '';
+  scripts.kms-encrypt.exec = ''
+    INFILE=$1
+    KMS_ARN=$2
+    if [ -z "$INFILE" ]; then
+      INFILE=/dev/stdin
+    fi
+    if [ -z "$KMS_ARN" ]; then
+      KMS_ARN=$DEFAULT_KMS_ARN
+    fi
+    aws kms encrypt \
+      --key-id $KMS_ARN \
+      --plaintext fileb://$INFILE \
+      --output text \
+      --region $AWS_REGION \
+      --query CiphertextBlob
+  '';
+  scripts.kms-encrypt.package = pkgs.bash;
 
+
+  scripts.kms-decrypt.exec = ''
+    INFILE=$1
+    KMS_ARN=$2
+    if [ -z "$INFILE" ]; then
+      INFILE=/dev/stdin
+    fi
+    if [ -z "$KMS_ARN" ]; then
+      KMS_ARN=$DEFAULT_KMS_ARN
+    fi
+    base64 --decode $INFILE | \
+      aws kms decrypt \
+        --key-id $KMS_ARN \
+        --ciphertext-blob fileb:///dev/stdin \
+        --output text\
+        --region $AWS_REGION\
+        --query Plaintext | \
+      base64 --decode
+  '';
+  scripts.kms-decrypt.package = pkgs.bash;
+
+  scripts.kms-create-alias.exec = ''
+    ARN_ID=$1
+    ARN_ALIAS=$2
+    if [ -z "$ARN_ID" ] || [ -z "$ARN_ALIAS" ]; then
+      echo "Usage: kms-create-alias id alias"
+    fi
+    aws kms create-alias \
+      --alias-name $ARN_ALIAS \
+      --target-key-id $ARN_ID \
+      --region $AWS_REGION
+  '';
+  scripts.kms-create-alias.package= pkgs.bash;
+  
   # enterShell = ''
   #   hello
   #   git --version
