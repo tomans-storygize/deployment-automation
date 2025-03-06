@@ -5,6 +5,7 @@ import mimetypes
 import pulumi
 from pulumi_aws import s3
 
+
 class S3Website:
 
     def __init__(self, prefix: str):
@@ -34,7 +35,7 @@ class S3Website:
                 filepath = file.absolute()
                 mime_type, _ = mimetypes.guess_type(filepath)
                 obj = s3.BucketObject(
-                    file, bucket=web_bucket.id, source=pulumi.FileAsset(filepath), content_type=mime_type
+                    str(file), bucket=web_bucket.id, source=pulumi.FileAsset(filepath), content_type=mime_type
                 )
 
         bucket_name = web_bucket.id
