@@ -11,6 +11,7 @@
     pkgs.awscli
     pkgs.awsebcli
 
+    pkgs.black
     pkgs.mypy
     pkgs.nil
     pkgs.python3Packages.python-lsp-server
@@ -110,4 +111,7 @@
   # git-hooks.hooks.shellcheck.enable = true;
 
   # See full reference at https://devenv.sh/reference/options/
+  # containers."deployment-automation".copyToRoot = ./.;
+  # containers."deployment-automation".startupCommand = "/mybinary serve";
+
 }

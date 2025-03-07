@@ -1,7 +1,68 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <head><meta charset="UTF-8">
     <title>Hello from tomans!</title></head>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #121212; /* Dark mode background */
+            color: #e0e0e0; /* Text color */
+            font-family: Arial, sans-serif;
+        }
+
+        .main-section {
+            display: flex;
+            flex-direction: column; /* Stacks logo and text vertically */
+            align-items: center;
+            justify-content: center;
+            height: 50%;
+            width: 50%;
+            background-color: #1e1e1e; /* Slightly lighter dark background */
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            overflow: hidden; /* Ensures content stays within bounds */
+            padding: 20px;
+        }
+
+        .main-section img {
+            max-width: 100%; /* Keep image within container */
+            max-height: 100%; /* Keep image within container */
+            padding-bottom: 30px;
+        }
+
+        .main-section p {
+            font-size: 1.2rem; /* Adjusts text size */
+            text-align: center; /* Centers text */
+            color: #ffffff; /* White text for contrast */
+        }
+        a {
+            color: #3f51b5; /* Accent color for link */
+            text-decoration: none; /* Removes underline */
+            transition: color 0.3s ease; /* Smooth transition for hover effect */
+        }
+
+        a:hover {
+            color: #7986cb; /* Lighter shade on hover */
+            text-decoration: underline; /* Underline on hover */
+        }
+
+        a:visited {
+            color: #9e9e9e; /* Color for visited links */
+        }
+    </style>
+</head>
 <body>
-    <p>Hello, S3!</p>
-    <p>Made with ❤️ with <a href="https://pulumi.com">Pulumi</a> and Python</p>
-</body></html>
+    <div class="main-section">
+        <img src="pulumipus-8bit.png" alt="pulumi-platypus-logo" width="222px">
+        <!-- <h1>hello s3!</h1> -->
+        <p>Made with ❤️ with <a href="https://www.pulumi.com/docs/iac/get-started/aws/review-project/">pulumi</a> and <a href="https://developers.google.com/edu/python/introduction">python</a></p></p>
+    </div>
+</body>
+</html>

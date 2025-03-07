@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import mimetypes
 
@@ -15,27 +16,34 @@ class S3Website:
         self.S3_SITE_NAME = f"{DEPLOY_PREFIX}-s3-website"
         self.S3_BLOCK_RULE_NAME = f"{DEPLOY_PREFIX}-public-access-block"
         self.BUCKET_POLICY_NAME = f"{DEPLOY_PREFIX}-bucket-policy"
-        
 
     def deploy(self) -> None:
         web_bucket = s3.BucketV2(self.S3_BUCKET_NAME)
 
         web_site = s3.BucketWebsiteConfigurationV2(
-           self.S3_SITE_NAME, bucket=web_bucket.bucket, index_document={"suffix": "index.html"}
+            self.S3_SITE_NAME,
+            bucket=web_bucket.bucket,
+            index_document={"suffix": "index.html"},
         )
 
         public_access_block = s3.BucketPublicAccessBlock(
             # https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html
-            self.S3_BLOCK_RULE_NAME, bucket=web_bucket.id, block_public_acls=False
+            self.S3_BLOCK_RULE_NAME,
+            bucket=web_bucket.id,
+            block_public_acls=False,
         )
 
-        content_dir = "www"
-        for file in Path(content_dir).glob("**/*"):
+        content_dir = Path("www")
+
+        for file in content_dir.glob("**/*"):
             if file.is_file():
-                filepath = file.absolute()
-                mime_type, _ = mimetypes.guess_type(filepath)
+                object_name = str(file.relative_to(content_dir))
+                mime_type, _ = mimetypes.guess_type(file)
                 obj = s3.BucketObject(
-                    str(file), bucket=web_bucket.id, source=pulumi.FileAsset(filepath), content_type=mime_type
+                    str(object_name),
+                    bucket=web_bucket.id,
+                    source=pulumi.FileAsset(file),
+                    content_type=mime_type,
                 )
 
         bucket_name = web_bucket.id
@@ -49,7 +57,6 @@ class S3Website:
         # Export the name of the bucket
         pulumi.export("bucket_name", web_bucket.id)
         pulumi.export("website_url", web_site.website_endpoint)
-
 
     def public_read_policy_for_bucket(self, bucket_name) -> pulumi.Output[str]:
         return pulumi.Output.json_dumps(
