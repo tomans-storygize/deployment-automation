@@ -2,7 +2,7 @@
 
 {
   # https://devenv.sh/basics/
-  env.DEFAULT_KMS_ARN = "alias/staging-dev-key";
+  env.DEFAULT_KMS_ALIAS = "alias/staging-dev-key";
   env.AWS_DEFAULT_REGION = "us-west-2";
 
   # https://devenv.sh/packages/
@@ -47,7 +47,7 @@
       INFILE=/dev/stdin
     fi
     if [ -z "$KMS_ARN" ]; then
-      KMS_ARN=$DEFAULT_KMS_ARN
+      KMS_ARN=$DEFAULT_KMS_ALIAS
     fi
     aws kms encrypt \
       --key-id $KMS_ARN \
@@ -66,7 +66,7 @@
       INFILE=/dev/stdin
     fi
     if [ -z "$KMS_ARN" ]; then
-      KMS_ARN=$DEFAULT_KMS_ARN
+      KMS_ARN=$DEFAULT_KMS_ALIAS
     fi
     base64 --decode $INFILE | \
       aws kms decrypt \
@@ -118,6 +118,11 @@
         "Name=vpc-id,Values=$VPC_ID" \
       --query "Subnets[0].SubnetId" \
       --output text
+  '';
+
+  scripts.find-hosted-zone-id.exec = ''
+    ZONE_NAME=$1
+    aws route53 list-hosted-zones --query "HostedZones[?Name == '$ZONE_NAME.'].Id" --output text
   '';
   
   # enterShell = ''

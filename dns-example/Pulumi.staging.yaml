@@ -1,0 +1,5 @@
+secretsprovider: awskms://alias/staging-dev-key
+encryptedkey: AQECAHhVRLimkBQn1IF5CHIST2Eyp9wlOMlaxwfQ8GRO0D/0/AAAAH4wfAYJKoZIhvcNAQcGoG8wbQIBADBoBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDDVUuKkCKGEOGKxmIAIBEIA77fxQP76UPxgS6cs2ni0TDKSqzWVuhIWuRX2MbbvQtDsTEZsJgrN7mXFKo2NLqfD4A0v+r9Rp6fUSOSM=
+config:
+  aws-py-s3-folder:vpc_name: staging
+  aws-py-s3-folder:tld: storygize.com
