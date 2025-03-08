@@ -5,7 +5,7 @@ import mimetypes
 
 import pulumi
 
-from pulumi_aws import route53, ec2
+from pulumi_aws import route53, ec2, vpc
 
 # https://www.pulumi.com/registry/packages/aws/api-docs/route53/
 
@@ -68,6 +68,7 @@ class PrivateDNSEntry:
     def deploy(self) -> None:
 
         env_zone = f"{self.env}.{self.tld}"
+        zone_name = env_zone.replace(".", "-")
 
         # nb: this block of code is managing this route53 zone!
         private_zone = route53.Zone(
@@ -88,6 +89,68 @@ class PrivateDNSEntry:
 
         instance_dns = f"{self.instance_name}.{env_zone}"
 
+        vpn_resolver_group_sg_name = f"sec-group-resolver-{zone_name}"
+
+        vpn_resolver_security_group = ec2.SecurityGroup(
+            vpn_resolver_group_sg_name,
+            name=vpn_resolver_group_sg_name,
+            description=f"dns resolver security group for dns in {env_zone}",
+            vpc_id=self.data_vpc.id,
+            tags={
+                "Name": vpn_resolver_group_sg_name,
+            },
+        )
+
+        ingress_rules = [
+            (53, 53, "tcp", "10.0.0.0/16", "dns-tcp"),
+            (53, 53, "udp", "10.0.0.0/16", "dns-udp"),
+        ]
+
+        for rule in ingress_rules:
+            (from_port, to_port, protocol, cidr, name_part) = rule
+            resolver_security_group_ingress_rule = vpc.SecurityGroupIngressRule(
+                f"sec-rule-i-{zone_name}-{name_part}",
+                security_group_id=vpn_resolver_security_group.id,
+                cidr_ipv4=cidr,
+                from_port=from_port,
+                ip_protocol=protocol,
+                to_port=to_port,
+            )
+
+        egress_rules = [
+            (0, 0, "-1", "0.0.0.0/0", "egress-all"),
+        ]
+
+        for rule in egress_rules:
+            (from_port, to_port, protocol, cidr, name_part) = rule
+            resolver_security_group_egress_rule = vpc.SecurityGroupEgressRule(
+                f"sec-rule-e-${zone_name}-{name_part}",
+                security_group_id=vpn_resolver_security_group.id,
+                cidr_ipv4=cidr,
+                ip_protocol=protocol,
+                from_port=from_port,
+                to_port=to_port,
+            )
+
+        vpn_resolver_name = f"dns-resolver-{zone_name}"
+        vpn_resolver = route53.ResolverEndpoint(
+            vpn_resolver_name,
+            name=vpn_resolver_name,
+            direction="INBOUND",
+            resolver_endpoint_type="IPV4",
+            security_group_ids=[vpn_resolver_security_group.id],
+            ip_addresses=[
+                dict(subnet_id=sg_id) for sg_id in self.data_private_subnets.ids[:2]
+            ],
+            protocols=[
+                "Do53",
+                "DoH",
+            ],
+            tags={
+                "Environment": self.env,
+            },
+        )
+
         # nb: this block of code is managing this route53 A record!
         instance_a_record = route53.Record(
             f"route53-a-{instance_dns}",
@@ -105,6 +168,7 @@ class PrivateDNSEntry:
         pulumi.export("vpc_zone_id", private_zone.id)
         pulumi.export("zone_ns_id", zone_delegate_ns_record.id)
         pulumi.export("instance_a_id", instance_a_record.id)
+        pulumi.export("resolver_id", vpn_resolver.ip_addresses)
         # raise NotImplementedError("Did you implement this function?")
 
 
