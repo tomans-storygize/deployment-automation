@@ -104,6 +104,7 @@ class PrivateDNSEntry:
         ingress_rules = [
             (53, 53, "tcp", "10.0.0.0/16", "dns-tcp"),
             (53, 53, "udp", "10.0.0.0/16", "dns-udp"),
+            (443, 443, "tcp", "10.0.0.0/16", "dns-https"),
         ]
 
         for rule in ingress_rules:
