@@ -3,7 +3,7 @@
 {
   # https://devenv.sh/basics/
   env.DEFAULT_KMS_ARN = "alias/staging-dev-key";
-  env.AWS_REGION = "us-west-2";
+  env.AWS_DEFAULT_REGION = "us-west-2";
 
   # https://devenv.sh/packages/
   packages = [
@@ -16,6 +16,8 @@
     pkgs.nil
     pkgs.python3Packages.python-lsp-server
     pkgs.pulumi-bin
+
+    pkgs.packer
   ];
 
   # https://devenv.sh/languages/
@@ -89,6 +91,34 @@
       --region $AWS_REGION
   '';
   scripts.kms-create-alias.package= pkgs.bash;
+
+  scripts.find-vpc-id.exec = ''
+    VPC_NAME=$1
+    if [ -z "$VPC_NAME" ]; then
+      echo "Usage: find-vpc-id <vpc-name>"
+      exit 1
+    fi
+    aws ec2 describe-vpcs \
+      --filters \
+        "Name=tag:Name,Values=$VPC_NAME" \
+      --query "Vpcs[0].VpcId" \
+      --output text
+  '';
+
+  scripts.find-subnet-id.exec = ''
+    SUBNET_NAME=$1
+    VPC_ID=$2
+    if [ -z "$SUBNET_NAME" ] || [ -z "$VPC_ID" ]; then
+      echo "Usage: find-subnet-id <subnet-name> <vpd-id>"
+      exit 1
+    fi
+    aws ec2 describe-subnets \
+      --filters \
+        "Name=tag:Name,Values=$SUBNET_NAME" \
+        "Name=vpc-id,Values=$VPC_ID" \
+      --query "Subnets[0].SubnetId" \
+      --output text
+  '';
   
   # enterShell = ''
   #   hello
