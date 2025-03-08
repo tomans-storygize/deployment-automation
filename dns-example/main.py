@@ -10,7 +10,7 @@ from pulumi_aws import route53, ec2
 # https://www.pulumi.com/registry/packages/aws/api-docs/route53/
 
 
-class DNSEntry:
+class PrivateDNSEntry:
     """
 
     Just an example of registering a DNS entry using AWS
@@ -27,20 +27,35 @@ class DNSEntry:
         assert self.env is not None, "vpc_name must be set"
         assert self.tld is not None, "tld must be set"
 
+        # nb: all this code runs within some an aws region!
+
+        # read only access: predefined VPC by name
         self.data_vpc = ec2.get_vpc(
             filters=[
                 dict(name="tag:Name", values=[self.env]),
             ]
         )
 
+        # read only access: predefined zone by name
         self.data_tld_zone = route53.get_zone(
             name=self.tld,
         )
 
+        # read only access: predefined ec2 instance by name
         self.data_ec2_instance = ec2.get_instance(
             filters=[
                 dict(name="tag:Name", values=[instance_name]),
                 dict(name="instance-state-name", values=["running"]),
+            ]
+        )
+
+        # private DNS is also requiring an inbound DNS resolver for outsiders
+        # in order to define an inbound DNS resolver we will need to show it some subnets
+        self.data_private_subnets = ec2.get_subnets(
+            filters=[
+                dict(name="vpc-id", values=[self.data_vpc.id]),
+                # using this attr as a proxy for 'Public/Private' tag
+                dict(name="map-public-ip-on-launch", values=[False]),
             ]
         )
 
@@ -86,6 +101,7 @@ class DNSEntry:
         pulumi.export("instance_id", self.data_ec2_instance.id)
         pulumi.export("tld_zone_id", self.data_tld_zone.id)
         pulumi.export("vpc_id", self.data_vpc.id)
+        pulumi.export("vpc_private_subnets", self.data_private_subnets.ids)
         pulumi.export("vpc_zone_id", private_zone.id)
         pulumi.export("zone_ns_id", zone_delegate_ns_record.id)
         pulumi.export("instance_a_id", instance_a_record.id)
@@ -93,4 +109,4 @@ class DNSEntry:
 
 
 if __name__ == "__main__":
-    DNSEntry("tomans-playground-server").deploy()
+    PrivateDNSEntry("tomans-playground-server").deploy()
