@@ -18,6 +18,7 @@
     pkgs.pulumi-bin
 
     pkgs.packer
+    pkgs.jq
   ];
 
   # https://devenv.sh/languages/
@@ -26,6 +27,7 @@
   languages.python.venv.requirements = ''
     pulumi>=3.153.0,<4.0.0
     pulumi-aws>=6.70.0,<7.0.0
+    pulumi-powerdns>=0.0.4<1.0.0
   '';
   # languages.python.poetry.enable = true;
   # languages.python.poetry.install.enable = false;
@@ -122,7 +124,20 @@
 
   scripts.find-hosted-zone-id.exec = ''
     ZONE_NAME=$1
+    if [ -z "$ZONE_NAME" ]; then
+      echo "Usage: find-hosted-zone-id <zone-name>"
+      exit 1
+    fi
     aws route53 list-hosted-zones --query "HostedZones[?Name == '$ZONE_NAME.'].Id" --output text
+  '';
+
+  scripts.find-certificate-arn.exec = ''
+    CERT_DOMAIN=$1
+    if [ -z "$CERT_DOMAIN" ]; then
+      echo "Usage: find-certificate-arn <cert-domain>"
+      exit 1
+    fi
+    aws acm list-certificates --query "CertificateSummaryList[?DomainName=='$CERT_DOMAIN'].CertificateArn" --output text
   '';
   
   # enterShell = ''
