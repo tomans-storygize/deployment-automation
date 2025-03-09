@@ -8,7 +8,7 @@
   # https://devenv.sh/packages/
   packages = [
     pkgs.git
-    pkgs.awscli
+    pkgs.awscli2
     pkgs.awsebcli
 
     pkgs.black

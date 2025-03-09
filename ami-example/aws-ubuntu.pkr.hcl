@@ -59,7 +59,9 @@ build {
       # currently requiring uidmap/dbus-user-session for rootless docker
       "sudo apt-get install dbus-user-session uidmap -y",
       # setup home-manager and rootless docker
-      "curl $NIXIFY | sh -s"
+      "curl $NIXIFY | sh -s",
+      # remove some basic existing aws defineds vars
+      "rm -rf /etc/ec2-metadata /etc/ssh/ssh_host_* /root/.ssh"
     ]
   }
 }
